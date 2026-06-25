@@ -1,0 +1,99 @@
+# Refer to https://github.com/koekeishiya/yabai/wiki/Installing-yabai-(latest-release)
+yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
+sudo yabai --load-sa
+
+# ============================================================================
+# Global Settings
+# ============================================================================
+
+yabai -m config layout                      bsp
+yabai -m config window_placement            second_child
+yabai -m config auto_balance                on
+yabai -m config split_ratio                 0.50
+yabai -m config window_animation_duration   0.0
+
+
+# ============================================================================
+# Padding & Gaps
+# ============================================================================
+
+yabai -m config top_padding                 4
+yabai -m config bottom_padding              8
+yabai -m config left_padding                8
+yabai -m config right_padding               8
+yabai -m config window_gap                  8
+
+
+# ============================================================================
+# Mouse Settings
+# ============================================================================
+
+yabai -m config mouse_modifier              alt
+yabai -m config mouse_action1               move
+yabai -m config mouse_action2               resize
+yabai -m config mouse_drop_action           swap
+yabai -m config focus_follows_mouse         autoraise
+yabai -m config mouse_follows_focus         off
+
+
+# ============================================================================
+# Window Appearance
+# ============================================================================
+
+# Window opacity (disabled; buggy in recent yabai versions)
+yabai -m config window_opacity              off
+
+
+# ============================================================================
+# Apps excluded from tiling
+# ============================================================================
+# Find exact app names: yabai -m query --windows | jq '.[].app'
+
+# Anti-minimize: force-deminimize prevents windows from being minimized.
+# application_hidden signal removed — it conflicts with Cmd+Tab space switching.
+# skhd `cmd - h : true` override handles hide prevention instead.
+yabai -m signal --add event=window_minimized action="yabai -m window \$YABAI_WINDOW_ID --deminimize"
+
+# --- macOS System Apps ---
+yabai -m rule --add app="^System Settings$"      manage=off
+yabai -m rule --add app="^System Preferences$"   manage=off
+yabai -m rule --add app="^System Information$"    manage=off
+yabai -m rule --add app="^Activity Monitor$"      manage=off
+yabai -m rule --add app="^Calculator$"            manage=off
+yabai -m rule --add app="^Dictionary$"            manage=off
+yabai -m rule --add app="^Disk Utility$"          manage=off
+yabai -m rule --add app="^Font Book$"             manage=off
+yabai -m rule --add app="^Keychain Access$"       manage=off
+yabai -m rule --add app="^Archive Utility$"       manage=off
+yabai -m rule --add app="^Digital Colou?r Meter$" manage=off
+yabai -m rule --add app="^Installer$"             manage=off
+yabai -m rule --add app="^Photo Booth$"           manage=off
+yabai -m rule --add app="^Screenshot$"            manage=off
+yabai -m rule --add app="^Stickies$"              manage=off
+
+# --- Third-Party Apps ---
+yabai -m rule --add app="^Karabiner-Elements$"    manage=off
+yabai -m rule --add app="^Karabiner-EventViewer$" manage=off
+yabai -m rule --add app="^Alfred Preferences$"    manage=off
+yabai -m rule --add app="^Raycast$"               manage=off
+yabai -m rule --add app="^1Password"              manage=off
+yabai -m rule --add app="^Docker Desktop$"        manage=off
+yabai -m rule --add app="^Logi Options"           manage=off
+yabai -m rule --add app="^Creative Cloud$"        manage=off
+yabai -m rule --add app="^Bartender"              manage=off
+yabai -m rule --add app="^iStat Menus"            manage=off
+
+
+# ============================================================================
+# Signals
+# ============================================================================
+
+borders active_color=0xffcba6f7 inactive_color=0xff313244 width=3.0 style=round &
+
+# Cmd+Tab workaround: yabai SA on macOS 26 applies focus without switching spaces.
+# This signal follows focus to the correct space when the frontmost app changes.
+yabai -m signal --add event=application_front_switched action='win_space=$(yabai -m query --windows --window 2>/dev/null | jq -r ".space // empty"); [ -n "$win_space" ] && yabai -m space --focus "$win_space" 2>/dev/null'
+
+# Refocus after window close: current window > mouse > first in space.
+# Note: window_destroyed timing can be unreliable; best-effort.
+yabai -m signal --add event=window_destroyed active=yes action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse &> /dev/null || yabai -m window --focus \$(yabai -m query --windows --space | jq .[0].id) &> /dev/null"

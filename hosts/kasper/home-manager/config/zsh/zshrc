@@ -1,0 +1,130 @@
+# ── History ────────────────────────────────────────────────────
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt SHARE_HISTORY          # share history across sessions
+setopt HIST_IGNORE_ALL_DUPS   # no duplicate entries
+setopt HIST_IGNORE_SPACE      # don't record commands starting with space
+setopt HIST_REDUCE_BLANKS     # remove extra blanks
+setopt APPEND_HISTORY         # append, don't overwrite
+
+# ── Key Bindings (portable — works in any terminal) ───────────
+# Requires terminal to send Option as Alt/Escape (not Unicode).
+# In WezTerm: send_composed_key_when_left_alt_is_pressed = false
+# In iTerm2: Profiles → Keys → Left Option → Esc+
+# In Terminal.app: Profiles → Keyboard → Use Option as Meta Key
+bindkey -e                            # emacs mode (the foundation)
+
+# Option+Left / Option+Right → jump word
+# Arrow key variants (what Option+Arrow actually sends)
+bindkey '\e[1;3D' backward-word       # Alt+LeftArrow
+bindkey '\e[1;3C' forward-word        # Alt+RightArrow
+# Letter variants (Alt+b / Alt+f — some terminals send these instead)
+bindkey '\eb' backward-word
+bindkey '\ef' forward-word
+
+# Option+Delete → delete word backward
+bindkey '\e\x7f' backward-kill-word   # Alt+Backspace
+
+# Option+Fn+Delete → delete word forward
+bindkey '\ed' kill-word               # Alt+d
+
+# Ctrl+U → delete to start of line
+bindkey '^U' backward-kill-line
+
+# Ctrl+A / Ctrl+E → start/end of line
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+
+# Ctrl+K → delete to end of line
+bindkey '^K' kill-line
+
+# ── General Options ───────────────────────────────────────────
+setopt AUTO_CD                # type a dir name to cd into it
+setopt CORRECT                # offer to correct typos
+setopt INTERACTIVE_COMMENTS   # allow # comments in interactive shell
+setopt NO_BEEP                # silence
+
+# ── Completion ────────────────────────────────────────────────
+autoload -Uz compinit
+# Only regenerate .zcompdump once a day (speeds up shell startup)
+if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
+  compinit
+else
+  compinit -C
+fi
+
+# Case-insensitive + partial-word completion
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
+zstyle ':completion:*' menu select
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*:descriptions' format '[%d]'
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*:*:*:*:processes' command "ps -u $USER -o pid,user,comm -w -w"
+
+# ── fzf ───────────────────────────────────────────────────────
+eval "$(fzf --zsh)"
+
+# ── fzf-tab (must come AFTER compinit and fzf) ───────────────
+source ~/.zsh/fzf-tab/fzf-tab.plugin.zsh
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color=always $realpath'
+zstyle ':fzf-tab:complete:*' fzf-preview 'echo ${(P)word} 2>/dev/null || echo $word'
+zstyle ':fzf-tab:*' switch-group '<' '>'
+
+# ── Syntax Highlighting & Autosuggestions ─────────────────────
+# Install: brew install zsh-syntax-highlighting zsh-autosuggestions
+[[ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && \
+  source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+[[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
+  source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+bindkey '^ ' autosuggest-accept      # Ctrl+Space to accept suggestion
+
+# ── Tools ─────────────────────────────────────────────────────
+eval "$(zoxide init zsh)"
+eval "$(starship init zsh)"
+eval "$(fnm env --use-on-cd --shell zsh)"
+
+# ── Aliases ───────────────────────────────────────────────────
+alias ls="eza --icons"
+alias ll="eza -la --icons"
+alias lt="eza --tree --icons --level=2"
+alias cat="bat"
+alias ..="cd .."
+alias ...="cd ../.."
+alias mkdir="mkdir -p"
+
+# ── Editor ─-──────────────────────────────────────────────────
+export EDITOR="micro"
+
+# ── pnpm ──────────────────────────────────────────────────────
+export PNPM_HOME="/Users/kasper/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+# ── theme ──────────────────────────────────────────────────────
+export FZF_DEFAULT_OPTS=" \
+--color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
+--color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
+--color=marker:#cba6f7,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8 \
+--color=selected-bg:#45475a \
+--border='rounded'"
+
+# Append a line after prompt instead of prepending
+precmd() {
+  if [[ -z "$_NEW_LINE_BEFORE_PROMPT" ]]; then
+    _NEW_LINE_BEFORE_PROMPT=1
+  else
+    print ""
+  fi
+}
+
+# Micro editor truecolor support
+export MICRO_TRUECOLOR=1
+alias dotfiles='git --git-dir=/Users/kasper/.dotfiles --work-tree=/Users/kasper'
+alias cc='claude'
+alias ccy='claude --dangerously-skip-permissions'
+export PATH="$HOME/.local/bin:$PATH"

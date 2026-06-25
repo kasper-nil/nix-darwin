@@ -1,0 +1,9 @@
+# nix build output
+result
+result-*
+
+# macOS
+.DS_Store
+
+# direnv
+.direnv/

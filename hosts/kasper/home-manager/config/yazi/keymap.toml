@@ -1,0 +1,9 @@
+[mgr]
+
+prepend_keymap = [
+    # Open lazygit
+    { on = ["g", "i"], run = "plugin lazygit", desc = "Lazygit" },
+
+    # Show only git-changed files
+    { on = ["g", "s"], run = "plugin vcs-files", desc = "Git changed files" },
+]
