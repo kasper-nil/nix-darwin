@@ -128,3 +128,14 @@ alias dotfiles='git --git-dir=/Users/kasper/.dotfiles --work-tree=/Users/kasper'
 alias cc='claude'
 alias ccy='claude --dangerously-skip-permissions'
 export PATH="$HOME/.local/bin:$PATH"
+
+# yazi: `y` opens yazi and cd's the shell to wherever you exit
+function y() {
+      local tmp cwd
+      tmp="$(mktemp -t yazi-cwd.XXXXXX)"
+      command yazi "$@" --cwd-file="$tmp"
+      if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+              builtin cd -- "$cwd"
+      fi
+      command rm -f -- "$tmp"
+}

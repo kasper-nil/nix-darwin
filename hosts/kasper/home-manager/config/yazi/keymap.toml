@@ -1,6 +1,12 @@
 [mgr]
 
 prepend_keymap = [
+    # Enter: cd into dir and quit (shell follows via `y` wrapper), or open file
+    { on = "<Enter>", run = "plugin cd-quit", desc = "Cd into directory and quit, or open file" },
+
+    # l: normal navigation — enter dir, or open file
+    { on = "l", run = "plugin smart-enter", desc = "Enter the child directory, or open the file" },
+
     # Open lazygit
     { on = ["g", "i"], run = "plugin lazygit", desc = "Lazygit" },
 

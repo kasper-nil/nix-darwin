@@ -9,6 +9,15 @@ linemode = "size"
 wrap = "yes"
 tab_size = 4
 
+# Piper previewers
+[[plugin.prepend_previewers]]
+url = "*.md"
+run  = 'piper -- s="$HOME/.config/yazi/glow-mocha.json"; d="${TMPDIR:-/tmp}/yazi-piper"; mkdir -p "$d"; k="$d/$(printf %s "$1-$w-$(stat -f %m "$1")-$(stat -f %m "$s")" | md5)"; [ -s "$k" ] || CLICOLOR_FORCE=1 glow -w=$w -s "$s" "$1" >"$k"; cat "$k"'
+
+[[plugin.prepend_previewers]]
+url = "*.json"
+run  = 'piper -- jq -C . "$1"'
+
 # Git status fetchers
 [[plugin.prepend_fetchers]]
 url   = "*"
