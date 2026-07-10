@@ -57,7 +57,6 @@
       "jq"
       "lazygit"
       "lua"
-      "mas"
       "micro"
       "mise"
       "neovim"
@@ -114,8 +113,8 @@
       "whichspace"
     ];
 
-    # The `mas` CLI is installed (above) but no `masApps = { … };` block is
-    # declared yet — Mac App Store apps stay unmanaged for now, since declaring
-    # them adds friction at switch (App Store sign-in, no auto-uninstall).
+    # MAS (Mac App Store) omitted entirely — unused. The `mas` CLI is therefore
+    # absent from `brews` above, so the zap cleanup uninstalls it on switch.
+    # To use later: add the `mas` brew back plus a `masApps = { … };` block here.
   };
 }
