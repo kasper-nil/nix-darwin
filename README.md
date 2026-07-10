@@ -53,7 +53,10 @@ Tool *configs* (dotfiles) are managed by home-manager under `home-manager/config
 
 ## Window management
 
-Tiling via [yabai] + [skhd] (hotkeys). Both come from the `koekeishiya/formulae` tap.
+Tiling via [yabai] + [skhd] (hotkeys), plus `borders` for the active-window
+highlight. yabai and skhd come from the `asmvik/formulae` tap — a fork with
+macOS 26 support. Do not switch them to upstream `koekeishiya/formulae`: it
+replaces the binaries and invalidates the scripting addition's sudoers entry.
 
 [nix-darwin]: https://github.com/nix-darwin/nix-darwin
 [home-manager]: https://github.com/nix-community/home-manager
