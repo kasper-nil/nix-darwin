@@ -106,6 +106,7 @@
     casks = [
       "1password"
       "alt-tab"
+      "betterdisplay"
       "boring-notch"
       "brave-browser"
       "claude"
