@@ -142,6 +142,12 @@ nix eval --raw .#darwinConfigurations.kasper.system.drvPath   # same hash?
   upgrade packages (keeps them fast) — they only install missing ones and zap
   unlisted ones. Upgrade deliberately with `brew update && brew upgrade`. An
   upgrade that bumps yabai/skhd needs a follow-up `sudo yabai --install-sa`.
+- **`brew update` can un-trust a third-party cask tap** (seen with
+  `theboredteam/boring-notch`): the next `darwin-rebuild switch` then aborts at
+  the Homebrew step — "Refusing to load cask … from untrusted tap" — and since
+  that step runs before home-manager under `set -e`, the WHOLE switch fails (no
+  dotfiles update). Re-trust with `brew trust theboredteam/boring-notch`, then
+  switch again. Imperative brew state; there is no nix option for it.
 - **After the first switch, `~/.zshrc` and other dotfiles are read-only store
   symlinks.** Change your shell by editing `home-manager/config/zsh/zshrc` and
   switching — not the live file.
