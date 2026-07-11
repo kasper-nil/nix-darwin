@@ -111,6 +111,7 @@
       "brave-browser"
       "claude"
       "claude-code@latest"
+      "deskreen"
       "discord"
       "docker-desktop"
       "dotnet-sdk"
