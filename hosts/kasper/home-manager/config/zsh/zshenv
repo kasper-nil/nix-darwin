@@ -1,0 +1,15 @@
+# ~/.zshenv — sourced by EVERY zsh invocation, including non-interactive
+# `zsh -c "..."`. This is the ONLY zsh startup file that `zsh -c` reads
+# (.zshrc/.zprofile are skipped), so anything a `zsh -c` command needs must live
+# here.
+#
+# Why this exists: skhd runs each keybinding as `/bin/zsh -c "<cmd>"`, and its
+# launchd process PATH is a stale snapshot (missing Homebrew's bin, and pinned to
+# a long-dead `fnm` shell dir). So bare `yabai` / `jq` in skhdrc and
+# close-or-quit.sh failed with "command not found" and every window/space hotkey
+# silently died. Putting Homebrew's bin on PATH here fixes every skhd command at
+# exec time, independent of whatever PATH skhd itself was started with.
+#
+# Interactive shells still build their full environment in ~/.zshrc (which runs
+# `brew shellenv`); this just guarantees the essentials for non-interactive ones.
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
