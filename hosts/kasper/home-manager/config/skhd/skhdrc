@@ -1,7 +1,7 @@
 # ============================================================================
 # skhd – keybindings for yabai
 # ============================================================================
-# Place this file at: ~/.config/skhd/skhdrc
+# Place this file at: ~/.skhdrc  (this skhd build does NOT read ~/.config/skhd/skhdrc)
 # Start skhd:   skhd --start-service
 # Restart skhd:  skhd --restart-service
 #
