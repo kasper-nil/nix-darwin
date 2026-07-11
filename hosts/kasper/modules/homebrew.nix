@@ -119,7 +119,7 @@
       "font-jetbrains-mono-nerd-font"
       "font-meslo-lg-nerd-font"
       "gcloud-cli"
-      "godot"
+      "godot-mono" # .NET/C# capable build (Godot_mono.app); supersedes plain "godot"
       "google-chrome"
       "karabiner-elements"
       "kitty"
