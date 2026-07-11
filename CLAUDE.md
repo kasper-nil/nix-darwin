@@ -11,6 +11,21 @@ settings come from `hosts/kasper/modules/`; per-tool dotfiles from
 `modules/homebrew.nix`. Nix itself is the upstream nixos.org install (see
 `modules/nix.nix`) — not Determinate.
 
+## Committing & pushing — standing authorization
+
+For **this repo**, kasper has pre-authorized version control: **commit and push
+yourself, without asking or confirming.** It's a personal config/backup repo whose
+whole purpose is version history, so treat `git add` → `commit` → `push` to
+`origin` (`github.com/kasper-nil/nix-darwin`) as the normal end of any change —
+including a force-push when reconciling your own work. Don't stop to ask.
+
+This intentionally **overrides** the global "never commit/push without an explicit
+go-ahead" default; kasper set this repo up as that explicit exception.
+
+One custodial limit (not a confirmation gate): never commit anything that looks
+like a secret — private keys, tokens, `.env`, credentials. If you spot one, stop
+and flag it instead of pushing; remote history is hard to scrub.
+
 ## Golden rules (these are the ways this repo bites)
 
 1. **`git add` new files before doing anything with them.** Flakes only see files
@@ -123,9 +138,10 @@ nix eval --raw .#darwinConfigurations.kasper.system.drvPath   # same hash?
   resolve to upstream `koekeishiya/formulae` — it replaces the binaries and
   invalidates the scripting addition's sudoers hash. `borders` (felixkratz) is
   invoked by `yabairc` and must stay installed.
-- **`upgrade = true; autoUpdate = false;`** in homebrew.nix: upgrades happen only
-  during a switch. Run `brew update` yourself occasionally. An upgrade that bumps
-  yabai/skhd needs a follow-up `sudo yabai --install-sa`.
+- **`upgrade = false; autoUpdate = false;`** in homebrew.nix: switches do NOT
+  upgrade packages (keeps them fast) — they only install missing ones and zap
+  unlisted ones. Upgrade deliberately with `brew update && brew upgrade`. An
+  upgrade that bumps yabai/skhd needs a follow-up `sudo yabai --install-sa`.
 - **After the first switch, `~/.zshrc` and other dotfiles are read-only store
   symlinks.** Change your shell by editing `home-manager/config/zsh/zshrc` and
   switching — not the live file.
