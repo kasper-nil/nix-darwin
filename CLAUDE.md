@@ -132,6 +132,18 @@ nix eval --raw .#darwinConfigurations.kasper.system.drvPath   # same hash?
   search plus home-manager and nix-darwin options from the live index. Best for
   "does a package/option exist" and home-manager options.
 
+## When behavior surprises you, search before spelunking
+
+nix-darwin / home-manager / Homebrew docs are thin and shift between releases, so
+when an option's effect is unclear or a tool misbehaves, **web-search the
+project's GitHub issues/discussions and official docs before reverse-engineering
+it by trial and error.** Recent breakage is usually a known bug with a posted
+workaround — e.g. Homebrew 6's Tap Trust blocking the boring-notch cask was brew
+bug #22668, fixed here declaratively with a tap `clone_target` (see
+`modules/homebrew.nix`). Minutes of searching beats an hour of `switch`-and-observe.
+(The global `context7` rule already covers library *API* docs; this is for
+behavior, bugs, and version quirks that docs won't mention.)
+
 ## Machine-specific gotchas
 
 - **yabai/skhd come from `asmvik/formulae`** (a macOS 26 fork). Never let them
