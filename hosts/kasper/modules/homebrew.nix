@@ -11,8 +11,19 @@
       # listed below is uninstalled on `darwin-rebuild switch`. Prune the lists,
       # not the system.
       cleanup = "zap";
-      autoUpdate = true;
+
+      # Upgrade outdated formulae/casks, but only during a switch — never let a
+      # stray `brew install` auto-update the index behind your back. This is
+      # nix-darwin's recommended pairing: upgrades happen at one deliberate
+      # moment (activation) instead of at random. Trade-off: run `brew update`
+      # yourself now and then so Homebrew's formula index isn't stale.
+      #
+      # WARNING: the day an upgrade bumps yabai/skhd, the scripting addition's
+      # sudoers entry (keyed to the binary hash) goes stale silently — re-run
+      # `sudo yabai --install-sa` afterwards. asmvik/formulae rarely moves, so
+      # this is infrequent, but it is the one upgrade that can break tiling.
       upgrade = true;
+      autoUpdate = false;
     };
 
     # Third-party formula repos. All currently-tapped repos are kept so the zap
