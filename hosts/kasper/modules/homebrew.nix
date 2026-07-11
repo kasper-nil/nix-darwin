@@ -12,17 +12,17 @@
       # not the system.
       cleanup = "zap";
 
-      # Upgrade outdated formulae/casks, but only during a switch — never let a
-      # stray `brew install` auto-update the index behind your back. This is
-      # nix-darwin's recommended pairing: upgrades happen at one deliberate
-      # moment (activation) instead of at random. Trade-off: run `brew update`
-      # yourself now and then so Homebrew's formula index isn't stale.
+      # upgrade = false: a switch does NOT upgrade formulae/casks — it only
+      # installs what's missing and (with zap) removes what's unlisted. This keeps
+      # switches fast; upgrading every outdated cask inline made them run many
+      # minutes. Upgrade deliberately on your own schedule: `brew update && brew
+      # upgrade`. autoUpdate = false stops a stray `brew install` from updating
+      # the index behind your back.
       #
-      # WARNING: the day an upgrade bumps yabai/skhd, the scripting addition's
-      # sudoers entry (keyed to the binary hash) goes stale silently — re-run
-      # `sudo yabai --install-sa` afterwards. asmvik/formulae rarely moves, so
-      # this is infrequent, but it is the one upgrade that can break tiling.
-      upgrade = true;
+      # WARNING: when you DO `brew upgrade` and it bumps yabai/skhd, the scripting
+      # addition's sudoers entry (keyed to the binary hash) goes stale silently —
+      # re-run `sudo yabai --install-sa` afterwards. That one upgrade can break tiling.
+      upgrade = false;
       autoUpdate = false;
     };
 
