@@ -117,6 +117,7 @@
       "font-jetbrains-mono-nerd-font"
       "font-meslo-lg-nerd-font"
       "gcloud-cli"
+      "godot"
       "google-chrome"
       "karabiner-elements"
       "kitty"
