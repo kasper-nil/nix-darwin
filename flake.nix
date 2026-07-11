@@ -35,5 +35,9 @@
       darwinConfigurations = {
         kasper = mkDarwin "kasper";
       };
+
+      # `nix fmt`. Also what the Claude Code format-on-edit hook shells out to,
+      # so agent-written Nix always lands RFC-style.
+      formatter.aarch64-darwin = nixpkgs.legacyPackages.aarch64-darwin.nixfmt-rfc-style;
     };
 }

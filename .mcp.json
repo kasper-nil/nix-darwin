@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "nixos": {
+      "command": "nix",
+      "args": [
+        "run",
+        "--extra-experimental-features",
+        "nix-command flakes",
+        "github:utensils/mcp-nixos",
+        "--"
+      ]
+    }
+  }
+}

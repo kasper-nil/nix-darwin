@@ -7,3 +7,6 @@ result-*
 
 # direnv
 .direnv/
+
+# Claude Code — personal per-user overrides (shared .claude/settings.json is committed)
+.claude/settings.local.json

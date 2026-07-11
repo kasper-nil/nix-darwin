@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Offline nix-darwin option lookup, pinned to THIS flake's exact revisions.
+# It cannot report an option that doesn't exist in your version of nix-darwin.
+#
+#   bin/nix-option 'homebrew.*upgrade'   # full detail (type/default/description)
+#   bin/nix-option -l security.pam       # matching names only
+#
+# For home-manager options or nixpkgs package search, use the `nixos` MCP server
+# (mcp-nixos) instead.
+set -euo pipefail
+
+names_only=0
+if [ "${1:-}" = "-l" ]; then
+  names_only=1
+  shift
+fi
+
+q="${1:-}"
+if [ -z "$q" ]; then
+  echo "usage: nix-option [-l] <regex>   e.g. nix-option 'homebrew.*upgrade'" >&2
+  exit 2
+fi
+
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Built from your config, so it tracks whatever nix-darwin rev flake.lock pins.
+# First run builds/substitutes it (~1s once cached).
+out="$(nix build \
+  --extra-experimental-features 'nix-command flakes' \
+  --no-write-lock-file --no-link --print-out-paths \
+  "$repo#darwinConfigurations.kasper.config.system.build.manual.optionsJSON")"
+json="$out/share/doc/darwin/options.json"
+
+python3 - "$q" "$json" "$names_only" <<'PY'
+import json, re, sys, textwrap
+
+query, path, names_only = sys.argv[1], sys.argv[2], sys.argv[3] == "1"
+data = json.load(open(path))
+rx = re.compile(query, re.I)
+keys = sorted(k for k in data if rx.search(k))
+
+if not keys:
+    print(f"no nix-darwin option matches /{query}/", file=sys.stderr)
+    sys.exit(1)
+
+if names_only:
+    print("\n".join(keys))
+    sys.exit(0)
+
+for k in keys:
+    o = data[k]
+    default = o.get("default")
+    dtext = default.get("text") if isinstance(default, dict) else default
+    desc = re.sub(r"\s+", " ", (o.get("description") or "").strip().split("\n\n")[0])
+    print(f"\x1b[1m{k}\x1b[0m")
+    print(f"  type:    {o.get('type', '?')}")
+    if dtext not in (None, ""):
+        print(f"  default: {dtext}")
+    if desc:
+        print(textwrap.fill(desc, width=78, initial_indent="  ", subsequent_indent="  "))
+    print()
+PY
