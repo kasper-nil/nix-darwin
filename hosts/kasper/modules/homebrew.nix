@@ -38,7 +38,17 @@
       "oven-sh/bun"
       "sinelaw/fresh"
       "supabase/tap"
-      "theboredteam/boring-notch"
+      {
+        # Homebrew 6's Tap Trust blocks this tap's cask (it has a postflight, so
+        # it counts as "runs code"). `trusted = true` ALONE is silently dropped by
+        # `brew bundle` (Homebrew bug #22668: it lands in Ruby's clone_target slot)
+        # UNLESS the tap also carries an explicit remote — so we pin clone_target.
+        # Together they emit `tap "...", "https://...", trusted: true`, the only
+        # form that actually sticks, so a switch no longer aborts "untrusted tap".
+        name = "theboredteam/boring-notch";
+        clone_target = "https://github.com/theboredteam/homebrew-boring-notch";
+        trusted = true;
+      }
       "typewhisper/tap"
     ];
 
