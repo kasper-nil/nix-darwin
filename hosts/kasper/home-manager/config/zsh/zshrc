@@ -142,3 +142,43 @@ function y() {
       fi
       command rm -f -- "$tmp"
 }
+
+# ── yabai scripting-addition auto-heal on `brew upgrade` ───────────────
+# yabairc runs `sudo yabai --load-sa` on every start / dock restart, and that's
+# passwordless ONLY because /etc/sudoers.d/yabai whitelists that exact command
+# keyed to the yabai binary's sha256 (imperative root state — NOT nix-managed).
+# A `brew upgrade` that bumps yabai changes the binary hash → the sudoers line
+# goes stale → `--load-sa` silently fails → tiling breaks until you re-run
+# `sudo yabai --install-sa` and refresh the hash by hand. This wraps `brew` so
+# any upgrade that actually changes the yabai binary heals it automatically:
+# reinstall the SA, rewrite the sudoers hash (validated with `visudo -c` before
+# it can replace the live file, so a bad write can't lock you out of sudo),
+# reload the SA. Every other brew command — and an upgrade that leaves yabai
+# untouched — passes straight through with no sudo prompt. (skhd needs no SA.)
+brew() {
+  if [[ "$1" != "upgrade" ]]; then
+    command brew "$@"
+    return
+  fi
+  local ybin before after rc tmp
+  ybin="$(command -v yabai)"
+  [[ -x "$ybin" ]] && before="$(shasum -a 256 "$ybin" | cut -d' ' -f1)"
+  command brew "$@"
+  rc=$?
+  [[ -x "$ybin" ]] && after="$(shasum -a 256 "$ybin" | cut -d' ' -f1)"
+  if [[ -n "$after" && "$before" != "$after" ]]; then
+    print -P "%F{yellow}⟳ yabai binary changed — healing scripting addition…%f"
+    sudo yabai --install-sa
+    tmp="$(mktemp)"
+    print -r -- "$(whoami) ALL=(root) NOPASSWD: sha256:$after $ybin --load-sa" > "$tmp"
+    if sudo visudo -cf "$tmp" >/dev/null; then
+      sudo install -m 0440 -o root -g wheel "$tmp" /etc/sudoers.d/yabai
+      sudo yabai --load-sa
+      print -P "%F{green}✓ yabai SA reinstalled, sudoers hash refreshed, SA reloaded — tiling intact.%f"
+    else
+      print -P "%F{red}✗ generated sudoers line failed validation — left /etc/sudoers.d/yabai untouched. Refresh by hand.%f"
+    fi
+    command rm -f -- "$tmp"
+  fi
+  return $rc
+}

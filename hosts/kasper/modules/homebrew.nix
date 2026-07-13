@@ -26,18 +26,17 @@
       autoUpdate = false;
     };
 
-    # Third-party formula repos. All currently-tapped repos are kept so the zap
-    # cleanup doesn't untap anything in use. Prune any you don't actually need.
+    # Third-party formula repos. Only taps that back an installed package are
+    # listed — zap cleanup untaps anything unlisted on switch. Pruned 6 taps that
+    # had ZERO installed formulae/casks and kept tripping Homebrew 6's Tap Trust:
+    # fastrepl, gechr, microsoft/foundrylocal, nikitabobko (AeroSpace — unused,
+    # yabai is the WM), sinelaw/fresh (fresh-editor comes from homebrew-core, not
+    # this tap), typewhisper. Re-add a tap only when you install something from it.
     taps = [
-      "asmvik/formulae"
-      "fastrepl/fastrepl"
-      "felixkratz/formulae"
-      "gechr/tap"
-      "microsoft/foundrylocal"
-      "nikitabobko/tap"
-      "oven-sh/bun"
-      "sinelaw/fresh"
-      "supabase/tap"
+      "asmvik/formulae" # yabai, skhd
+      "felixkratz/formulae" # borders
+      "oven-sh/bun" # bun
+      "supabase/tap" # supabase
       {
         # Homebrew 6's Tap Trust blocks this tap's cask (it has a postflight, so
         # it counts as "runs code"). `trusted = true` ALONE is silently dropped by
@@ -49,7 +48,6 @@
         clone_target = "https://github.com/theboredteam/homebrew-boring-notch";
         trusted = true;
       }
-      "typewhisper/tap"
     ];
 
     # CLI tools (your `brew leaves`). Tap-qualified names are pinned deliberately:
