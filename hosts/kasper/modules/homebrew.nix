@@ -117,7 +117,6 @@
       "gcloud-cli"
       "godot-mono" # .NET/C# capable build (Godot_mono.app); supersedes plain "godot"
       "google-chrome"
-      "karabiner-elements"
       "kitty"
       "libreoffice"
       "notion"

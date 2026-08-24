@@ -5,7 +5,6 @@
     ./btop
     ./git
     ./helix
-    ./karabiner
     ./kitty
     ./skhd
     ./starship

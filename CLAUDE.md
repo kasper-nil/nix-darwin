@@ -55,6 +55,11 @@ and flag it instead of pushing; remote history is hard to scrub.
 ## Everyday commands
 
 ```sh
+# Everything below in one command (defined in home-manager/config/zsh/zshrc):
+# stage -> build -> switch -> commit + push. `-e` edits homebrew.nix first,
+# `-b` builds only, `-u` updates inputs first, `-n` skips the commit.
+rebuild
+
 # Look up a nix-darwin option (offline, pinned to this flake)
 ./bin/nix-option 'homebrew.*upgrade'
 

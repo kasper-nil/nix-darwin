@@ -19,6 +19,9 @@
 ctrl + alt + cmd - t : /Applications/kitty.app/Contents/MacOS/kitten quick-access-terminal
 ctrl + alt + cmd - b : open -na "Firefox"
 
+# Raycast root search (replaces the old Karabiner meh+D -> cmd+space hop).
+ctrl + alt + cmd - d : open raycast://
+
 # ── Window Focus ────────────────────────────────────────────────────────────
 # Move focus between tiled windows in the current space
 
