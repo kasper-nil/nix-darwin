@@ -182,3 +182,119 @@ brew() {
   fi
   return $rc
 }
+
+# ── nix-darwin: `rebuild` ─────────────────────────────────────────────
+# The whole switch dance in one command, from any directory:
+#   stage → build → switch → commit + push.
+#
+#   rebuild              stage, build, switch, commit + push
+#   rebuild -e           open modules/homebrew.nix in $EDITOR first, then the above
+#   rebuild -b           build only — no sudo, live system untouched
+#   rebuild -u           `nix flake update` first, then build + switch
+#   rebuild -n           switch, but leave git alone (no commit/push)
+#   rebuild -m "msg"     commit message (default: "rebuild: <changed files>")
+#
+# Why each step (see ~/.config/nix-darwin/CLAUDE.md):
+#   stage  — flakes only see files in the git tree, so a brand-new .nix file
+#            that isn't `git add`-ed is invisible to the build.
+#   build  — needs no root and catches every eval error; `switch` is the only
+#            step that mutates the live machine, so it must never be the first
+#            time the config is evaluated.
+#   update — as the normal user, NEVER under sudo: root and your user keep
+#            separate fetcher caches, and mixing them causes NAR-hash mismatches.
+#
+# Adding a Homebrew package: `rebuild -e`, add the name to `brews` (CLI) or
+# `casks` (GUI), save, and it installs. Remember `cleanup = "zap"` — anything
+# you delete from that file is uninstalled on the next switch, casks together
+# with their app data.
+export NIX_DARWIN_DIR="${NIX_DARWIN_DIR:-$HOME/.config/nix-darwin}"
+export NIX_DARWIN_HOST="${NIX_DARWIN_HOST:-kasper}"
+
+rebuild() {
+  emulate -L zsh
+  setopt local_options pipe_fail
+
+  local dir="$NIX_DARWIN_DIR" host="$NIX_DARWIN_HOST" msg=""
+  local -i build_only=0 do_update=0 do_commit=1 do_edit=0
+
+  while (( $# )); do
+    case "$1" in
+      -e|--edit)      do_edit=1 ;;
+      -b|--build)     build_only=1 ;;
+      -u|--update)    do_update=1 ;;
+      -n|--no-commit) do_commit=0 ;;
+      -m|--message)   shift; msg="$1" ;;
+      -h|--help)
+        print -r -- 'rebuild [-e] [-b] [-u] [-n] [-m "msg"]  — stage, build, switch, commit+push'
+        return 0 ;;
+      *) print -P "%F{red}rebuild: unknown option '$1'%f (try -h)"; return 2 ;;
+    esac
+    shift
+  done
+
+  [[ -d "$dir" ]] || { print -P "%F{red}✗ $dir not found%f"; return 1 }
+
+  (( do_edit )) && ${EDITOR:-micro} "$dir/hosts/$host/modules/homebrew.nix"
+
+  # Stage first: an unstaged new file is invisible to the flake.
+  command git -C "$dir" add -A || return 1
+
+  if (( do_update )); then
+    print -P "%F{blue}▸%f updating flake inputs…"
+    ( builtin cd -q "$dir" && command nix flake update ) || return 1
+    command git -C "$dir" add -A
+  fi
+
+  print -P "%F{blue}▸%f building %F{cyan}$host%f…"
+  if ! command nix build --no-link "$dir#darwinConfigurations.$host.system"; then
+    print -P "%F{red}✗ build failed — live system untouched, nothing committed%f"
+    return 1
+  fi
+
+  if (( build_only )); then
+    print -P "%F{green}✓ build ok%f (nothing applied — drop -b to switch)"
+    return 0
+  fi
+
+  print -P "%F{blue}▸%f switching… %F{242}(sudo — Touch ID)%f"
+  if ! command sudo darwin-rebuild switch --flake "$dir#$host"; then
+    print -P "%F{red}✗ switch failed — nothing committed%f"
+    return 1
+  fi
+
+  # Generation number, without needing sudo to read the profile lock.
+  local gen="${${$(readlink /nix/var/nix/profiles/system)##*system-}%-link}"
+  print -P "%F{green}✓%f switched — generation %F{cyan}${gen:-?}%f"
+
+  (( do_commit )) || return 0
+  if command git -C "$dir" diff --cached --quiet; then
+    print -P "%F{242}nothing to commit%f"
+    return 0
+  fi
+
+  if [[ -z "$msg" ]]; then
+    local -a changed short
+    changed=("${(@f)$(command git -C "$dir" diff --cached --name-only)}")
+    # Trim the repo's fixed prefixes so the subject stays readable.
+    short=("${(@)changed/#hosts\/$host\//}")
+    short=("${(@)short/#home-manager\/config\//}")
+    short=("${(@)short/#modules\//}")
+    if (( ${#short} > 3 )); then
+      msg="rebuild: ${(j:, :)short[1,3]} +$(( ${#short} - 3 )) more"
+    else
+      msg="rebuild: ${(j:, :)short}"
+    fi
+  fi
+
+  if ! command git -C "$dir" commit -q -m "$msg"; then
+    print -P "%F{yellow}⚠ commit failed — switch is live, config still uncommitted%f"
+    return 1
+  fi
+  print -P "%F{green}✓%f committed %F{242}\"$msg\"%f"
+
+  if command git -C "$dir" push -q; then
+    print -P "%F{green}✓%f pushed"
+  else
+    print -P "%F{yellow}⚠ push failed — commit is local only%f"
+  fi
+}

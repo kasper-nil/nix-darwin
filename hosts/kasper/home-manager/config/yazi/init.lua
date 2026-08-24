@@ -17,13 +17,15 @@ require("githead"):setup({
 
 -- Git status sign customization (optional)
 th.git = th.git or {}
-th.git.modified_sign = "M"
+th.git.unstaged_sign = "M"
+th.git.staged_sign   = "M"
 th.git.added_sign    = "A"
 th.git.deleted_sign  = "D"
 th.git.untracked_sign = "?"
 th.git.ignored_sign  = "-"
 th.git.clean_sign    = "✔"
-th.git.modified = ui.Style():fg("blue")
+th.git.unstaged = ui.Style():fg("blue")
+th.git.staged   = ui.Style():fg("green")
 th.git.deleted  = ui.Style():fg("red"):bold()
 th.git.added    = ui.Style():fg("green")
 th.git.untracked = ui.Style():fg("yellow")

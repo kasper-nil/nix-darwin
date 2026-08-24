@@ -104,12 +104,10 @@
     casks = [
       "1password"
       "alt-tab"
-      "betterdisplay"
       "boring-notch"
       "brave-browser"
       "claude"
       "claude-code@latest"
-      "deskreen"
       "discord"
       "docker-desktop"
       "dotnet-sdk"
@@ -133,6 +131,7 @@
       "vlc"
       "wezterm@nightly"
       "whichspace"
+      "vorssaint"
     ];
 
     # MAS (Mac App Store) omitted entirely — unused. The `mas` CLI is therefore
