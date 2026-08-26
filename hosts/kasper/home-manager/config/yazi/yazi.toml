@@ -8,6 +8,11 @@ linemode = "size"
 [preview]
 wrap = "yes"
 tab_size = 4
+max_width  = 1200        # thumbnail resolution cap (default 600)
+max_height = 1200
+image_filter  = "lanczos3" # sharper resample than default "triangle"
+image_quality = 90         # 50-90, JPEG quality of cached thumbs
+image_delay   = 30         # ms before rendering; less flicker while scrolling
 
 # Piper previewers
 [[plugin.prepend_previewers]]

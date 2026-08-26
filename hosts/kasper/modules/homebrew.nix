@@ -73,6 +73,7 @@
       "git-delta"
       "glow"
       "helix"
+      "imagemagick" # yazi: HEIC/JXL/AVIF preview
       "jq"
       "lazygit"
       "lua"
@@ -87,6 +88,8 @@
       "postgresql@15"
       "posting"
       "redis"
+      "resvg" # yazi: SVG preview
+      "sevenzip" # yazi: archive content preview
       "spotify_player"
       "starship"
       "supabase/tap/supabase"
