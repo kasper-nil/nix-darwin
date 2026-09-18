@@ -19,9 +19,13 @@
       # upgrade`. autoUpdate = false stops a stray `brew install` from updating
       # the index behind your back.
       #
-      # WARNING: when you DO `brew upgrade` and it bumps yabai/skhd, the scripting
+      # WARNING: when you DO `brew upgrade` and it bumps yabai, the scripting
       # addition's sudoers entry (keyed to the binary hash) goes stale silently —
-      # re-run `sudo yabai --install-sa` afterwards. That one upgrade can break tiling.
+      # refresh /etc/sudoers.d/yabai and re-run `sudo yabai --load-sa` afterwards
+      # (the brew() wrapper in the zshrc does this). That one upgrade can break
+      # tiling. NOTE 2026-09-18: yabai is currently a local fork build for macOS
+      # 27, so a `brew upgrade` of it will fail at the symlink step by design —
+      # see "TEMPORARY … yabai is a local fork build" in CLAUDE.md.
       upgrade = false;
       autoUpdate = false;
     };

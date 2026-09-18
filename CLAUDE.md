@@ -149,6 +149,80 @@ bug #22668, fixed here declaratively with a tap `clone_target` (see
 (The global `context7` rule already covers library *API* docs; this is for
 behavior, bugs, and version quirks that docs won't mention.)
 
+## TEMPORARY (2026-09-18): yabai is a local fork build, not Homebrew's
+
+macOS 27 broke yabai v7.1.25 — and it is **not** a permissions/signing problem
+(SIP config, the `-arm64e_preview_abi` boot-arg and the Accessibility grants all
+survived the upgrade). Two separate failures:
+
+- The scripting addition injects into Dock but refuses macOS 27, so its
+  capability mask is `0x00`: `yabai -m space --focus N` exits 0 and does nothing.
+  Space hotkeys look dead, which makes skhd look broken when it is fine.
+- The main binary only matches *exact* macOS major versions, so 27 falls back to
+  pre-Monterey code paths: no mission-control observation, no window
+  created/destroyed subscriptions — the layout stops reflowing when a window closes.
+
+Upstream `asmvik/yabai` has no macOS 27 support (latest release v7.1.25, no
+commits since 2026-06-14; tracking issue #2822). So `/opt/homebrew/bin/yabai` is
+currently a hand-built binary from <https://github.com/AhsanFazal/yabai>
+(asmvik master + macOS 27 "goldengate" Dock offsets and version checks),
+ad-hoc signed, sitting where Homebrew's symlink used to be. Homebrew's 7.1.25
+keg is still installed underneath, so going back is one relink.
+
+Verified after install: SA payload v2.1.31 reports attrib `0x7F` (all 7 Dock
+hooks resolved), space focus works, layout reflows on window close, skhd hotkeys
+fire end to end.
+
+What this changes day to day:
+
+- Homebrew's yabai 7.1.25 keg is **still installed** (that is the revert path) and
+  brew still records it as linked — only the `bin/yabai` symlink was replaced by a
+  real file. `yabai` is also **`brew pin`ned**, so `brew upgrade` skips it and says
+  so instead of installing a keg it then can't link. A `switch` never touches it
+  either (`upgrade = false`). That "yabai is pinned" notice during a `brew upgrade`
+  is your signal that a new release exists — check whether it supports macOS 27,
+  then revert below.
+- `/etc/sudoers.d/yabai` pins the fork binary's sha256. Any relink or reinstall
+  of Homebrew's yabai makes the hash stale, and `sudo yabai --load-sa` then fails
+  silently at startup — symptom: space commands go quiet again.
+
+### Revert when upstream ships macOS 27 support
+
+Check <https://github.com/asmvik/yabai/releases> and issue #2822 first, then:
+
+```bash
+brew unpin yabai
+rm -f /opt/homebrew/bin/yabai
+brew update && brew upgrade asmvik/formulae/yabai   # or just: brew link --overwrite yabai
+h=$(shasum -a 256 /opt/homebrew/bin/yabai | cut -d' ' -f1); t=$(mktemp)
+printf '%s ALL=(root) NOPASSWD: sha256:%s /opt/homebrew/bin/yabai --load-sa\n' "$(whoami)" "$h" > "$t"
+sudo visudo -cf "$t" && sudo install -m 0440 -o root -g wheel "$t" /etc/sudoers.d/yabai
+sudo /opt/homebrew/bin/yabai --load-sa
+yabai --restart-service
+```
+
+Then re-grant Accessibility (toggle yabai off/on in System Settings → Privacy &
+Security → Accessibility) — the signature changed, so the old grant is void — and
+delete this section.
+
+### Rebuilding the fork (e.g. a macOS 27.x update moves the Dock offsets)
+
+`git clone https://github.com/AhsanFazal/yabai && cd yabai && make install`, then
+the same swap: `install -m 0755 bin/yabai /opt/homebrew/bin/yabai.new`,
+`codesign -fs - /opt/homebrew/bin/yabai.new`, `mv -f` it into place, refresh the
+sudoers hash exactly as above, `sudo yabai --load-sa`, `yabai --restart-service`,
+re-grant Accessibility. Use `--restart-service` (a kickstart), never
+`--start-service` — that rewrites `~/Library/LaunchAgents/com.asmvik.yabai.plist`
+with whatever PATH the calling shell had, which can strip `/opt/homebrew/bin` and
+break `borders`/`jq` in yabairc.
+
+Health check (must list all 7 hooks — dock.spaces, dppm, addSpace, removeSpace,
+moveSpace, setFrontWindow, animation_time_addr):
+
+```bash
+log show --last 5m --predicate 'process == "Dock" AND eventMessage CONTAINS "yabai"'
+```
+
 ## Machine-specific gotchas
 
 - **yabai/skhd come from `asmvik/formulae`** (a macOS 26 fork). Never let them
@@ -158,7 +232,10 @@ behavior, bugs, and version quirks that docs won't mention.)
 - **`upgrade = false; autoUpdate = false;`** in homebrew.nix: switches do NOT
   upgrade packages (keeps them fast) — they only install missing ones and zap
   unlisted ones. Upgrade deliberately with `brew update && brew upgrade`. An
-  upgrade that bumps yabai/skhd needs a follow-up `sudo yabai --install-sa`.
+  upgrade that bumps yabai needs the `/etc/sudoers.d/yabai` hash refreshed and
+  `sudo yabai --load-sa` re-run — the `brew()` wrapper in the home-manager zshrc
+  does both automatically from an interactive shell. (There is no `--install-sa`
+  flag; `--load-sa` installs *and* loads.)
 - **`brew update` can un-trust a third-party cask tap** (seen with
   `theboredteam/boring-notch`): the next `darwin-rebuild switch` then aborts at
   the Homebrew step — "Refusing to load cask … from untrusted tap" — and since
